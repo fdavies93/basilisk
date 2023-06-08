@@ -23,5 +23,10 @@ print("{}", fibonnaci(10))
 ## Language Features
 
 * Static typing, not duck typing. This is needed for a reasonable attempt at a compiled language.
-* Enforced pure functions. All variables are passed by reference in Basilisk, and cannot be modified once passed. Functions must return a different object to that which was passed in.
+* Enforced pure functions. All variables are passed by reference or by copy in Basilisk, and cannot be modified once passed. Functions must return a different object to that which was passed in.
 * No concept of objects or object-oriented programming. The abstractions of OOP tend to be confusing and brittle and Basilisk aims to be simple and flexible.
+
+## Language Design Resources
+
+LMU language design notes:
+https://cs.lmu.edu/~ray/notes/languagedesignnotes/

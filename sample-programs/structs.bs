@@ -9,6 +9,8 @@ employee[] employees = [
     # this looks like a constructor but is actually syntactic sugar for __construct_employee__
     # it can be statically allocated at compile time because it's actually a list of two objects we already know the size of
     # however this might complicate the definition of the list type
+    # open question: should an array of structs contain references or aim to allocate the minimum possible memory?
+    # in other words, should the employees be on the stack or the heap?
     employee ( "Obi-Wan", "Kenobi", "obiwan@jedi.org", 105000 ),
     employee ( "Mace", "Windu", "macewindu@jedi.org", 105000 )
 ]

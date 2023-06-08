@@ -26,6 +26,7 @@ print("{}", fibonnaci(10))
 * Static typing, not duck typing. This is needed for a reasonable attempt at a compiled language.
 * Enforced pure functions. All variables are passed by reference or by copy in Basilisk, and cannot be modified once passed. Functions must return a different object to that which was passed in.
 * No concept of objects or object-oriented programming. The abstractions of OOP tend to be confusing and brittle and Basilisk aims to be simple and flexible. Instead Basilisk uses *structs* and built-in functions to do the work often handled by objects.
+* Metaprogramming and code generation is a key feature of Basilisk, which lets declarations stay succinct while maintaining fast compiled programs.
 
 ## Language Design Resources
 

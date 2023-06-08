@@ -1,0 +1,14 @@
+# generate default functions for the employee struct e.g. __construct_employee__
+@datatype
+struct employee {
+    u16[] first_name, last_name, email
+    u32 salary
+}
+
+employee[] employees = [
+    # this looks like a constructor but is actually syntactic sugar for __construct_employee__
+    # it can be statically allocated at compile time because it's actually a list of two objects we already know the size of
+    # however this might complicate the definition of the list type
+    employee ( "Obi-Wan", "Kenobi", "obiwan@jedi.org", 105000 ),
+    employee ( "Mace", "Windu", "macewindu@jedi.org", 105000 )
+]

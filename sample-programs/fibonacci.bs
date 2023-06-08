@@ -1,0 +1,14 @@
+i32 fibonnaci(i32 term) {
+    i32[2] terms = [1,1]
+    i32 next_term = 1
+
+    for _ in 2..term {
+        next_term = terms[0] + terms[1]
+        terms[0] = terms[1]
+        terms[1] = next_term
+    }
+
+    return next_term
+}
+
+print("{}", fibonnaci(10))

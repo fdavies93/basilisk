@@ -11,6 +11,7 @@ employee[] employees = [
     # however this might complicate the definition of the list type
     # open question: should an array of structs contain references or aim to allocate the minimum possible memory?
     # in other words, should the employees be on the stack or the heap?
+    # the only reason for forcing the former is to make compiler easier to implement, so latter
     employee ( "Obi-Wan", "Kenobi", "obiwan@jedi.org", 105000 ),
     employee ( "Mace", "Windu", "macewindu@jedi.org", 105000 )
 ]

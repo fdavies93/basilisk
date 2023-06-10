@@ -1,7 +1,8 @@
 from enum import IntEnum
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from copy import deepcopy
 from typing import Callable, Union
+from json import dumps
 
 digits = [chr(i) for i in range(48,58)] # digits by char code
 whitespace = [' ', '\n', '\r', '\t'] # ignore
@@ -297,11 +298,11 @@ def evaluate(node):
             return evaluate(node.children[0]) * -1
 
 luthor = InfixLexer()
-tokens = luthor.lex("2 ^ -(0.25)")
+tokens = luthor.lex("10 + 10 - 10 + 10")
 print(tokens)
 
 parser = InfixParser()
 ast = parser.parse(tokens)
-print(ast)
+print(dumps(asdict(ast), indent=2))
 
 print(evaluate(ast))

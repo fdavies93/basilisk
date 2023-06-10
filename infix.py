@@ -152,8 +152,10 @@ class InfixLexer:
 
             self.tokens.append(next_char)
             self.prev_token = next_char
-
-            self.step_fn = self.step_neutral
+        
+            if not next_char == close_bracket:
+                self.step_fn = self.step_neutral
+                
         elif next_char in whitespace:
             return
         else:
@@ -191,14 +193,13 @@ class InfixParser():
     # identify and simplify unary minus
     # multiply
     # divide
-    # add
-    # subtract
+    # add (therefore, also subtract)
 
     def __init__(self):
         self.operations = [
+            InfixParser.parse_unary_minus,
             lambda ls : InfixParser.pbo("*", ls),
             lambda ls : InfixParser.pbo("/", ls),
-            InfixParser.parse_unary_minus,
             lambda ls : InfixParser.pbo("+", ls),
         ]
 
@@ -225,7 +226,6 @@ class InfixParser():
                 new_list : list = out_list[:i-1]
                 new_list.append(ParseNode(operator, [out_list[i-1], out_list[i+1]]))
                 new_list.extend(out_list[i+2:])
-                print(new_list)
                 out_list = new_list
                 i = 0
             # elif tokens[i] in adm:
@@ -290,7 +290,7 @@ def evaluate(node):
             return evaluate(node.children[0]) * -1
 
 luthor = InfixLexer()
-tokens = luthor.lex("((100 / 6) + 20 * 5) / (10 * 100)")
+tokens = luthor.lex("(10 - (10 + 5)) + ((10))")
 print(tokens)
 
 parser = InfixParser()

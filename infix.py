@@ -196,21 +196,42 @@ class InfixParser():
 
     def __init__(self):
         self.operations = [
-            InfixParser.parse_unary_minus,
             lambda ls : InfixParser.pbo("*", ls),
             lambda ls : InfixParser.pbo("/", ls),
+            InfixParser.parse_unary_minus,
             lambda ls : InfixParser.pbo("+", ls),
         ]
 
     @classmethod
     def parse_unary_minus(cls, tokens: list[Union[str, ParseNode]]) -> list[Union[str, ParseNode]]:
-        pass
-
+        i = 0
+        out_list = []
+        while i < len(tokens):
+            if tokens[i] == '-':
+                out_list.append(ParseNode('-', [tokens[i+1]]))
+                i += 1 # so that we step forward TWO
+            else:
+                out_list.append(tokens[i])
+            i += 1
+        return out_list
 
     # pbo stands for Parse Binary Operator
     @classmethod
     def pbo(cls, operator : str, tokens: list[Union[str, ParseNode]]) -> list[Union[str, ParseNode]]:
-        pass
+        i = 0
+        out_list = deepcopy(tokens)
+        while i < len(out_list):
+            if out_list[i] == operator and isinstance(out_list[i],str):
+                new_list : list = out_list[:i-1]
+                new_list.append(ParseNode(operator, [out_list[i-1], out_list[i+1]]))
+                new_list.extend(out_list[i+2:])
+                print(new_list)
+                out_list = new_list
+                i = 0
+            # elif tokens[i] in adm:
+            #     out_list.extend(tokens[i - 1 : i + 1])
+            i += 1
+        return out_list
 
     # should return the root of an AST
     def parse(self, tokens : list[str]) -> ParseNode:
@@ -238,9 +259,31 @@ class InfixParser():
 
         for operation in self.operations:
             cur_list = operation(cur_list)
-
+            print(cur_list)
         return cur_list[0]
 
+def evaluate(node):
+    ops = {
+        '+' : lambda x, y : x + y,
+        '/' : lambda x, y : x / y,
+        '*' : lambda x, y : x * y
+    }
+    if isinstance(node, str):
+        return float(node)
+    elif isinstance(node, ParseNode):
+        if node.token in adm:
+            left = evaluate(node.children[0])
+            right = evaluate(node.children[1])
+            return ops[node.token](left, right)
+        elif node.token == minus:
+            return evaluate(node.children[0]) * -1
+
 luthor = InfixLexer()
-tokens = luthor.lex("10 - 10")
+tokens = luthor.lex("10 - 10 / 10 + 10")
 print(tokens)
+
+parser = InfixParser()
+ast = parser.parse(tokens)
+print(ast)
+
+print(evaluate(ast))

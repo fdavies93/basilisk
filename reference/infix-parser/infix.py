@@ -121,7 +121,6 @@ class InfixLexer:
                 return
 
             self.tokens.append(next_char)
-            print(self.tokens)
             self.prev_token = next_char
 
             self.step_fn = self.step_neutral

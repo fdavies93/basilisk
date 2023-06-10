@@ -7,12 +7,12 @@ digits = [chr(i) for i in range(48,58)] # digits by char code
 whitespace = [' ', '\n', '\r', '\t'] # ignore
 open_bracket = '('
 close_bracket = ')'
-adm = ['+', '/', '*']
+adme = ['+', '^', '/', '*']
 minus = '-'
 dot = '.'
 
 operators = [open_bracket, close_bracket, minus]
-operators.extend(adm)
+operators.extend(adme)
 
 class InfixLexer:
     def __init__(self):
@@ -51,9 +51,9 @@ class InfixLexer:
             # it's invalid, throw an error
             raise ValueError
         
-        # this only happens where expression ends after an operator, which is invalid
-        if len(self.tape) == 0:
-            raise ValueError
+        if len(self.tape) == 0 and self.cur_token != "":
+            self.tokens.append(self.cur_token)
+            self.prev_token = self.cur_token
         
     def step_lexing_minus(self):
 
@@ -72,7 +72,7 @@ class InfixLexer:
             # can't end input on a - sign
             raise ValueError()
         
-        if self.prev_token not in {None, open_bracket}.union(adm):
+        if self.prev_token not in {None, open_bracket}.union(adme):
             self.tokens.append('+')
             self.prev_token = '+'
             # if it WASN'T in that set then + is valid, so add it as an operator
@@ -120,7 +120,8 @@ class InfixLexer:
                 return
 
             self.tokens.append(next_char)
-            self.prev_token = next_char   
+            print(self.tokens)
+            self.prev_token = next_char
 
             self.step_fn = self.step_neutral
             
@@ -155,7 +156,7 @@ class InfixLexer:
         
             if not next_char == close_bracket:
                 self.step_fn = self.step_neutral
-                
+
         elif next_char in whitespace:
             return
         else:
@@ -198,6 +199,7 @@ class InfixParser():
     def __init__(self):
         self.operations = [
             InfixParser.parse_unary_minus,
+            lambda ls : InfixParser.pbo("^", ls),
             lambda ls : InfixParser.pbo("*", ls),
             lambda ls : InfixParser.pbo("/", ls),
             lambda ls : InfixParser.pbo("+", ls),
@@ -275,6 +277,7 @@ class InfixParser():
 
 def evaluate(node):
     ops = {
+        '^' : lambda x, y : x ** y,
         '+' : lambda x, y : x + y,
         '/' : lambda x, y : x / y,
         '*' : lambda x, y : x * y
@@ -282,7 +285,7 @@ def evaluate(node):
     if isinstance(node, str):
         return float(node)
     elif isinstance(node, ParseNode):
-        if node.token in adm:
+        if node.token in adme:
             left = evaluate(node.children[0])
             right = evaluate(node.children[1])
             return ops[node.token](left, right)
@@ -290,7 +293,7 @@ def evaluate(node):
             return evaluate(node.children[0]) * -1
 
 luthor = InfixLexer()
-tokens = luthor.lex("(10 - (10 + 5)) + ((10))")
+tokens = luthor.lex("1 + 1")
 print(tokens)
 
 parser = InfixParser()

@@ -249,23 +249,28 @@ class InfixParser():
                 # recurse, using list after bracket
                 inner = self.parse( cur_list[cur_i + 1 :] )
                 cur_list = cur_list[ : cur_i]
-                cur_list.append(inner)
-                cur_i += 1
+                cur_list.extend(inner)
+                cur_i = 0
 
             elif token == ")":
                 # we've reached the innermost statement of expression
                 # take the whole expression and parse it according to
                 # operator precedence
+                out_list = cur_list[: cur_i]
+
                 for operation in self.operations:
-                    cur_list = operation(cur_list)
-                # the list should now have only 1 item in it - the root
-                return cur_list[0]
+                    out_list = operation(out_list)
+
+                out_list.extend( cur_list[cur_i + 1 :] )
+
+                return out_list
             
             else: cur_i += 1
 
         for operation in self.operations:
             cur_list = operation(cur_list)
-            print(cur_list)
+            # print(cur_list)
+
         return cur_list[0]
 
 def evaluate(node):
@@ -285,7 +290,7 @@ def evaluate(node):
             return evaluate(node.children[0]) * -1
 
 luthor = InfixLexer()
-tokens = luthor.lex("10 - (10 / (10 + 10))")
+tokens = luthor.lex("((100 / 6) + 20 * 5) / (10 * 100)")
 print(tokens)
 
 parser = InfixParser()

@@ -68,10 +68,6 @@ class InfixLexer:
                 minuses += 1
             next_char = self.tape[0]
             self.tape = self.tape[1:]
-
-        # if len(self.tape) == 0:
-        #     # can't end input on a - sign
-        #     raise ValueError()
         
         if self.prev_token not in {None, open_bracket}.union(adme):
             self.tokens.append('+')
@@ -235,8 +231,6 @@ class InfixParser():
                 new_list.extend(out_list[i+2:])
                 out_list = new_list
                 i = 0
-            # elif tokens[i] in adm:
-            #     out_list.extend(tokens[i - 1 : i + 1])
             i += 1
         return out_list
 
@@ -296,13 +290,3 @@ def evaluate(node):
             return ops[node.token](left, right)
         elif node.token == minus:
             return evaluate(node.children[0]) * -1
-
-luthor = InfixLexer()
-tokens = luthor.lex("10 + 10 - 10 + 10")
-print(tokens)
-
-parser = InfixParser()
-ast = parser.parse(tokens)
-print(dumps(asdict(ast), indent=2))
-
-print(evaluate(ast))

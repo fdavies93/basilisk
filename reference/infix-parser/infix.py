@@ -3,6 +3,7 @@ from dataclasses import dataclass, asdict
 from copy import deepcopy
 from typing import Callable, Union
 from json import dumps
+from io import TextIOWrapper
 
 digits = [chr(i) for i in range(48,58)] # digits by char code
 whitespace = [' ', '\n', '\r', '\t'] # ignore
@@ -289,3 +290,74 @@ def evaluate(node):
             return ops[node.token](left, right)
         elif node.token == minus:
             return evaluate(node.children[0]) * -1
+
+
+
+def op_to_llvm(op, children : tuple[Union[int, float]], new_register : int):
+    
+    # determine if left is number or register
+    left_arg = f"{children[0]}"
+    if isinstance(children[0], int):
+        left_arg = "%" + left_arg
+
+    # determine if right is number or register
+    if op == minus:
+        right_arg = "-1.0"
+    else:
+        right_arg = f"{children[1]}"
+        if isinstance(children[1], int):
+            right_arg = "%" + right_arg
+
+    llvm_ops = {
+        '+': 'fadd',
+        '-': 'fmul',
+        '/': 'fdiv',
+        '*': 'fmul'
+    }
+
+    return f"%{new_register} = {llvm_ops[op]} float {left_arg}, {right_arg}\n"
+
+def compile_at(node, handle : TextIOWrapper, prev_node = -1):
+    if isinstance(node, str):
+        return float(node)
+    elif isinstance(node, ParseNode):
+        if node.token in adme:
+            left = compile_at(node.children[0], handle, prev_node=prev_node)
+            left_r = left
+            
+            if isinstance(left, float):
+                left_r = prev_node
+
+            if node.token == minus:
+                handle.write( op_to_llvm(minus, (left), left_r + 1) )
+                return left_r + 1
+
+            right = compile_at(node.children[1], handle, prev_node=left_r)
+
+            register = right
+
+            if isinstance(right, float):
+                register = left_r
+
+            handle.write( op_to_llvm(node.token, (left, right), register + 1) )
+            return register + 1
+
+def compile(node, path):
+    prefix = '\n'.join([
+        "@.str = private unnamed_addr constant [3 x i8] c\"%f\\00\", align 1",
+        "declare i32 @printf(i8*, ...)",
+        "define i32 @main() {",
+        "entry:",
+        ""
+    ])
+    with open(path, "w") as f:
+        f.write(prefix)
+        last_node = compile_at(node, f)
+
+        suffix = '\n'.join([
+            f"%{last_node+1} = fpext float %{last_node} to double",
+            f"%out = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str, i64 0, i64 0), double %{last_node+1})",
+            "ret i32 0",
+            "}"
+        ])
+        f.write(suffix)

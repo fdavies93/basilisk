@@ -23,11 +23,12 @@ class InfixLexer:
     def reset(self):
         self.tape = ""
         self.tokens = []
-        self.prev_token = None
         self.cur_token = ""
-        self.has_dot = False
         self.step_fn = self.step_neutral
+        # could be removed to a second pass
+        self.has_dot = False
         self.brackets_open = 0
+        self.prev_token = None
 
     def step_neutral(self):
         next_char = self.tape[0]
@@ -70,6 +71,7 @@ class InfixLexer:
             next_char = self.tape[0]
             self.tape = self.tape[1:]
         
+        # this should properly be a second lexing step
         if self.prev_token not in {None, open_bracket}.union(adme):
             self.tokens.append('+')
             self.prev_token = '+'
@@ -78,6 +80,7 @@ class InfixLexer:
         if not (minuses % 2) == 0:
             self.tokens.append('-')
             self.prev_token = '-'
+        # to here
 
         # this is identical to step_neutral_fn - move to own fn?
         if next_char in digits or next_char == dot:
@@ -96,6 +99,7 @@ class InfixLexer:
         if len(self.tape) == 0 and self.cur_token != "":
             self.tokens.append(self.cur_token)
             self.prev_token = self.cur_token
+        # end function step_neutral
         
 
     def step_lexing_number(self):

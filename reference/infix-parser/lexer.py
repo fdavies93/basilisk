@@ -12,6 +12,9 @@ class AbstractLexer():
         self.tokens = []
         self.last_instruction = LexBehaviour.PUSH
         self.transitions = {
+            # all we care about is:
+            # do we push the current accumulator? as what?
+            # do we push the next token? as what?
             "neutral": [
                 (r'\(','neutral',LexBehaviour.PUSH), 
                 (r'[0-9]','number', LexBehaviour.ACCUMULATE),
@@ -69,16 +72,35 @@ class AbstractLexer():
 
         raise ValueError
     
+    def graphviz(self, outPath : str):
+        lines = [
+            'digraph fsm {',
+            'fontname="Roboto,Arial,sans-serif"',
+            'node [fontname="Roboto,Arial,sans-serif"]',
+            'rankdir=LR;',
+            'node [shape=circle];'
+        ]
+        for state in self.transitions:
+            for transition in self.transitions[state]:
+                lines.append(f'{state.replace("-","_")} -> {transition[1].replace("-","_")} ["label" = "{str(transition[0]).replace("-","_")}"];')
+        lines.append('}')
+
+        with open(outPath, "w") as f:
+            for ln in lines:
+                f.write(f"{ln}\n")
+
     def lex(self, input : str):
         self.reset()
         for char in input:
             self.step(char)
 
         if self.last_instruction == LexBehaviour.ACCUMULATE:
+            # could use an explicit transition to EOF state in state definitions
             self.tokens.append(self.token)
         
         return self.tokens
     
 luthor = AbstractLexer()
 tokens = luthor.lex("10 + 10 + (5 / 5 - 10) + 10 / -10.581")
+luthor.graphviz('./viz.gv')
 print(tokens)

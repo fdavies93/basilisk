@@ -5,15 +5,18 @@
 
 <operation> := <expression> <operator> <expression>
 
-<operator> := "*" | "/" | "+" | "-"
+<bracket-expression> := "(" <expression> ")"
 
 <unary-minus> := "-" <number>
                | "-" <bracket-expression>
 
-<bracket-expression> := "(" <expression> ")"
+<number> := <integer>
+          | <integer> "." <integer>
+          | "." <integer>
 
-<number> := <digit>+ "." <digit>+
-          | <digit>+
-          | "." <digit>+
+<integer> := <digit> 
+           | <digits> <digit>
+
+<operator> := "*" | "/" | "+" | "-"
 
 <digit> := "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"

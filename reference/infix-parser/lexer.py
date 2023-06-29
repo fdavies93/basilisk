@@ -82,7 +82,7 @@ class AbstractLexer():
         ]
         for state in self.transitions:
             for transition in self.transitions[state]:
-                lines.append(f'{state.replace("-","_")} -> {transition[1].replace("-","_")} ["label" = "{str(transition[0]).replace("-","_")}"];')
+                lines.append(f'{state.replace("-","_")} -> {transition[1].replace("-","_")} ["label" = "{str(transition[0])}"];')
         lines.append('}')
 
         with open(outPath, "w") as f:

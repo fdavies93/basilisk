@@ -1,0 +1,27 @@
+digraph fsm {
+fontname="Roboto,Arial,sans-serif"
+node [fontname="Roboto,Arial,sans-serif"]
+rankdir=LR;
+node [shape=circle];
+neutral -> neutral ["label" = "\("];
+neutral -> number ["label" = "[0-9]"];
+neutral -> number_dot ["label" = "\."];
+neutral -> minus ["label" = "-"];
+number -> neutral ["label" = "None"];
+number -> number ["label" = "[0-9]"];
+number -> expect_operator ["label" = "\)"];
+number -> neutral ["label" = "[+*(/]"];
+number -> number_dot ["label" = "\."];
+number -> minus ["label" = "-"];
+number_dot -> neutral ["label" = "None"];
+number_dot -> number_dot ["label" = "[0-9]"];
+number_dot -> expect_operator ["label" = "\)"];
+number_dot -> neutral ["label" = "[+*(/]"];
+number_dot -> minus ["label" = "-"];
+expect_operator -> neutral ["label" = "[+*\(/]"];
+expect_operator -> minus ["label" = "-"];
+expect_operator -> expect_operator ["label" = "\)"];
+minus -> number_dot ["label" = "\."];
+minus -> number ["label" = "[0-9]"];
+minus -> minus ["label" = "-"];
+}

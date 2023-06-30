@@ -1,13 +1,16 @@
 from enum import IntEnum
-from typing import Callable, Pattern
+from typing import Callable, Pattern, Union
 import re
 
 class LexBehaviour(IntEnum):
     ACCUMULATE = 0,
     PUSH = 1
 
+TransitionFn = Callable[["AbstractLexer", str],None]
+Transition = tuple[Pattern,str,Union[tuple[TransitionFn],TransitionFn]]
+
 class AbstractLexer():
-    def __init__(self, transitions : dict[str, list[tuple[Pattern,str,tuple[Callable[["AbstractLexer", str],None]]]]], start_state : str):
+    def __init__(self, transitions : dict[str, list[Transition]], start_state : str):
         self.ignore = '\n\r\t '
         self.token = ''
         self.tokens = []
@@ -39,16 +42,25 @@ class AbstractLexer():
         if next_char in self.ignore:
             return
 
-        for expr in self.transitions.get(self.state):
-            if re.match(expr[0], next_char) != None:
+        matches = 0
+        state = self.state
+        for expr in self.transitions.get(state):
+            if expr[0] != None and re.match(expr[0], next_char) != None:
+                matches += 1
+                
+                if matches > 1:
+                    raise ValueError(f"Overlapping symbol definitions in {state}")
+                
                 self.state = expr[1]
-                # need a way to deal with last element (i.e. case where tape isn't empty)
-                # check if expr[2] is a single callable function first and add to typing
-                for fn in expr[2]:
-                    fn(self,next_char)
-                return
 
-        raise ValueError
+                if isinstance(expr[2], tuple):
+                    for fn in expr[2]:
+                        fn(self,next_char)
+                else:
+                    expr[2](self,next_char)
+
+        if matches == 0:
+            raise ValueError(f"No valid matches for next character in state {self.state}.")
     
     def graphviz(self, outPath : str):
         lines = [
@@ -72,13 +84,16 @@ class AbstractLexer():
         for char in input:
             self.step(char)
 
-        if self.last_instruction == LexBehaviour.ACCUMULATE:
-            # could use an explicit transition to EOF state in state definitions
-            self.tokens.append(self.token)
+        possible_eof = self.transitions.get(self.state)[0]
+        print(possible_eof)
+        if possible_eof[0] == None:
+            if isinstance(possible_eof[2], tuple):
+                for fn in possible_eof[2]:
+                    fn(self,"")
+            else:
+                possible_eof[2](self,"")
+        # if self.last_instruction == LexBehaviour.ACCUMULATE:
+        #     # could use an explicit transition to EOF state in state definitions
+        #     self.tokens.append(self.token)
         
         return self.tokens
-    
-luthor = AbstractLexer()
-tokens = luthor.lex("10 + 10 + (5 / 5 - 10) + 10 / -10.581")
-luthor.graphviz('./viz.gv')
-print(tokens)

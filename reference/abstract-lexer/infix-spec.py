@@ -1,5 +1,5 @@
 from enum import IntEnum
-from lexer import AbstractLexer, LexBehaviour
+from lexer import AbstractLexer, Transition, TransitionFn
 
 class InfixLexTypes(IntEnum):
     MINUS = 0,
@@ -29,6 +29,7 @@ def push_number(obj : AbstractLexer, next_char : str):
     obj.tokens.append( (InfixLexTypes.NUMBER, obj.token) )
 
 number_tuple = ( push_number, push_operator, AbstractLexer.reset_token )
+number_eof = (push_number, AbstractLexer.reset_token )
 
 transitions = {
             # all we care about is:
@@ -47,6 +48,7 @@ transitions = {
                 (r'-','minus', push_operator)
             ],
             "number": [
+                (None, 'neutral', number_eof),
                 (r'[0-9]', 'number', AbstractLexer.accumulate),
                 (r'\)', 'expect-operator', number_tuple),
                 (r'[+*(/]','neutral', number_tuple),
@@ -54,6 +56,7 @@ transitions = {
                 (r'-','minus', number_tuple)
             ],
             'number-dot': [
+                (None, 'neutral', number_eof),
                 (r'[0-9]', 'number-dot', AbstractLexer.accumulate),
                 (r'\)', 'expect-operator', number_tuple),
                 (r'[+*(/]','neutral', number_tuple),
@@ -70,3 +73,8 @@ transitions = {
                 (r'[0-9]', 'number', AbstractLexer.accumulate)
             }
 }
+
+luthor = AbstractLexer(transitions, "neutral")
+tokens = luthor.lex("10 + 10 + (5 / 5 - 10) + 10 / -10.581")
+luthor.graphviz('./viz.gv')
+print(tokens)

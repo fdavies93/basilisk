@@ -1,10 +1,5 @@
-from enum import IntEnum
 from typing import Callable, Pattern, Union
 import re
-
-class LexBehaviour(IntEnum):
-    ACCUMULATE = 0,
-    PUSH = 1
 
 TransitionFn = Callable[["AbstractLexer", str],None]
 Transition = tuple[Pattern,str,Union[tuple[TransitionFn],TransitionFn]]
@@ -39,8 +34,9 @@ class AbstractLexer():
         self.tokens = []
 
     def step(self, next_char : str):
-        if next_char in self.ignore:
-            return
+        # if next_char in self.ignore:
+        #     return
+        # print(next_char)
 
         matches = 0
         state = self.state
@@ -85,15 +81,12 @@ class AbstractLexer():
             self.step(char)
 
         possible_eof = self.transitions.get(self.state)[0]
-        print(possible_eof)
+        
         if possible_eof[0] == None:
             if isinstance(possible_eof[2], tuple):
                 for fn in possible_eof[2]:
                     fn(self,"")
             else:
                 possible_eof[2](self,"")
-        # if self.last_instruction == LexBehaviour.ACCUMULATE:
-        #     # could use an explicit transition to EOF state in state definitions
-        #     self.tokens.append(self.token)
         
         return self.tokens

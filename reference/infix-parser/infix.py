@@ -274,7 +274,6 @@ class InfixParser():
 
         for operation in self.operations:
             cur_list = operation(cur_list)
-            # print(cur_list)
 
         return cur_list[0]
 

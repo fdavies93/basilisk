@@ -1,14 +1,17 @@
 from enum import IntEnum
 from lexer import AbstractLexer, Transition, TransitionFn
+from argparse import ArgumentParser
+from sys import argv
 
 class InfixLexTypes(IntEnum):
-    MINUS = 0,
-    OPEN_BRACKET = 1,
-    CLOSE_BRACKET = 2,
-    PLUS = 3,
-    MULTIPLY = 4,
-    DIVIDE = 5,
+    MINUS = 0
+    OPEN_BRACKET = 1
+    CLOSE_BRACKET = 2
+    PLUS = 3
+    MULTIPLY = 4
+    DIVIDE = 5
     NUMBER = 6
+    NEW_LINE = 7
 
 # you can write a bespoke function which takes the content of the token
 # and emits the correct thing
@@ -19,7 +22,9 @@ op_codes = {
     ')': InfixLexTypes.CLOSE_BRACKET,
     '+': InfixLexTypes.PLUS,
     '*': InfixLexTypes.MULTIPLY,
-    '/': InfixLexTypes.DIVIDE
+    '/': InfixLexTypes.DIVIDE,
+    '\n': InfixLexTypes.NEW_LINE,
+    '\r': InfixLexTypes.NEW_LINE
 }
 
 def push_operator(obj : AbstractLexer, next_char : str):
@@ -28,6 +33,7 @@ def push_operator(obj : AbstractLexer, next_char : str):
 def push_number(obj : AbstractLexer, next_char : str):
     obj.tokens.append( (InfixLexTypes.NUMBER, obj.token) )
 
+number_space = ( push_number, AbstractLexer.reset_token )
 number_tuple = ( push_number, push_operator, AbstractLexer.reset_token )
 number_eof = (push_number, AbstractLexer.reset_token )
 
@@ -42,44 +48,67 @@ transitions = {
             # PUSH should be append token, append accumulator, reset accumulator
             # ACCUMULATE should be append token to accumulator / tape
             "neutral": [
-                (r'\s', 'neutral', ()),
-                (r'\(','neutral', push_operator),
+                (r'[\t ]','neutral', ()),
+                (r'[\n\r]','neutral', push_operator), # i.e. do nothing
+                (r'\(','neutral', push_operator), 
                 (r'[0-9]','number', AbstractLexer.accumulate),
                 (r'\.','number-dot', AbstractLexer.accumulate),
-                (r'-','minus', push_operator)
+                (r'-','minus', push_operator),
+                (r'#','comment',())
             ],
             "number": [
                 (None, 'neutral', number_eof),
-                (r'\s', 'number', ()),
+                (r'[\n\r]','neutral', number_tuple),
+                (r'[ \t]','expect-operator', number_space),
                 (r'[0-9]', 'number', AbstractLexer.accumulate),
                 (r'\)', 'expect-operator', number_tuple),
                 (r'[+*(/]','neutral', number_tuple),
                 (r'\.','number-dot', AbstractLexer.accumulate),
-                (r'-','minus', number_tuple)
+                (r'-','minus', number_tuple),
+                (r'#','comment', number_space)
             ],
             'number-dot': [
                 (None, 'neutral', number_eof),
-                (r'\s', 'number-dot', ()),
+                (r'[\n\r]','neutral', number_tuple),
+                (r'[ \t]','expect-operator', number_space),
                 (r'[0-9]', 'number-dot', AbstractLexer.accumulate),
                 (r'\)', 'expect-operator', number_tuple),
                 (r'[+*(/]','neutral', number_tuple),
-                (r'-','minus', number_tuple)
+                (r'-','minus', number_tuple),
+                (r'#','comment',number_space)
             ],
             'expect-operator': [
-                (r'\s', 'expect-operator', ()),
+                # perhaps check if brackets have been closed correctly - neutral might be wrong state to go to
+                (r'[\n\r]','neutral', push_operator),
+                (r'[ \t]','expect-operator', ()),
                 (r'[+*\(/]','neutral', push_operator),
                 (r'-','minus', push_operator),
-                (r'\)','expect-operator', push_operator)
+                (r'\)','expect-operator', push_operator),
+                (r'#', 'comment', ())
             ],
-            'minus': {
-                (r'\s', 'minus', ()),
+            'minus': [
+                # newline in the middle of a minus expression is INVALID
+                (r'[ \t]','minus', ()), # i.e. do nothing
                 (r'-','minus', push_operator),
                 (r'\.','number-dot', AbstractLexer.accumulate),
                 (r'[0-9]', 'number', AbstractLexer.accumulate)
-            }
+                # comment after minus will lead to invalid code, therefore invalid
+            ],
+            'comment': [
+                (r'[\n\r]','neutral',push_operator),
+                (r'(?![\n\r])','comment',())
+            ]
 }
 
 luthor = AbstractLexer(transitions, "neutral")
-tokens = luthor.lex("10 + 10 + (5 / 5 - 10) + 10 / -10.581")
-luthor.graphviz('./viz.gv')
-print(tokens)
+
+parser = ArgumentParser(prog="Infix Plus Lexer")
+parser.add_argument('-i', '--input',action='store')
+
+args = parser.parse_args(argv[1:])
+
+if args.input:
+    with open(args.input,'r') as f:
+        file = f.read()
+    tokens = luthor.lex(file)
+    print(tokens)

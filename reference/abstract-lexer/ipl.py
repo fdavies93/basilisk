@@ -139,15 +139,17 @@ transitions = {
             ]
 }
 
-luthor = AbstractLexer(transitions, "neutral")
 
-parser = ArgumentParser(prog="Infix Plus Lexer")
-parser.add_argument('-i', '--input',action='store')
+if __name__ == "__main__":
+    luthor = AbstractLexer(transitions, "neutral")
 
-args = parser.parse_args(argv[1:])
+    parser = ArgumentParser(prog="Infix Plus Lexer")
+    parser.add_argument('-i', '--input',action='store')
 
-if args.input:
-    with open(args.input,'r') as f:
-        file = f.read()
-    tokens = luthor.lex(file)
-    print(tokens)
+    args = parser.parse_args(argv[1:])
+
+    if args.input:
+        with open(args.input,'r') as f:
+            file = f.read()
+        tokens = luthor.lex(file)
+        print(tokens)

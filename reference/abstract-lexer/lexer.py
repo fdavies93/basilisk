@@ -1,12 +1,13 @@
 from typing import Callable, Pattern, Union
 import re
 
-TransitionFn = Callable[["AbstractLexer", str],None]
-Transition = tuple[Pattern,str,Union[tuple[TransitionFn],TransitionFn]]
+LexTransitionFn = Callable[["AbstractLexer", str],None]
+LexTransition = tuple[Pattern,str,Union[tuple[LexTransitionFn],LexTransitionFn]]
+LexToken = tuple[int, str]
 
 class AbstractLexer():
-    def __init__(self, transitions : dict[str, list[Transition]], start_state : str):
-        self.ignore = '\n\r\t '
+    def __init__(self, transitions : dict[str, list[LexTransition]], start_state : str):
+        # self.ignore = '\n\r\t '
         self.token = ''
         self.tokens = []
         self.transitions = transitions

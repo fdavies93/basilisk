@@ -1,5 +1,5 @@
 from enum import IntEnum
-from lexer import AbstractLexer, Transition, TransitionFn
+from lexer import AbstractLexer, LexTransition, LexTransitionFn
 
 class InfixLexTypes(IntEnum):
     MINUS = 0,

@@ -1,54 +1,54 @@
 # IPL means Infix Plus Lexer
 
-from enum import IntEnum
-from lexer import AbstractLexer, Transition, TransitionFn
+from enum import IntEnum, auto
+from lexer import AbstractLexer, LexTransition, LexTransitionFn
 from argparse import ArgumentParser
 from sys import argv
 
-class InfixLexTypes(IntEnum):
-    MINUS = 0
-    OPEN_BRACKET = 1
-    CLOSE_BRACKET = 2
-    PLUS = 3
-    MULTIPLY = 4
-    DIVIDE = 5
-    NUMBER = 6
-    NEW_LINE = 7
-    ASSIGN = 8
-    TOKEN = 9
+class IPLexToken(IntEnum):
+    MINUS = auto()
+    OPEN_BRACKET = auto()
+    CLOSE_BRACKET = auto()
+    PLUS = auto()
+    MULTIPLY = auto()
+    DIVIDE = auto()
+    NUMBER = auto()
+    NEW_LINE = auto()
+    ASSIGN = auto()
+    TOKEN = auto()
 
 # you can write a bespoke function which takes the content of the token
 # and emits the correct thing
 
 op_codes = {
-    '-': InfixLexTypes.MINUS,
-    '(': InfixLexTypes.OPEN_BRACKET,
-    ')': InfixLexTypes.CLOSE_BRACKET,
-    '+': InfixLexTypes.PLUS,
-    '*': InfixLexTypes.MULTIPLY,
-    '/': InfixLexTypes.DIVIDE,
-    '\n': InfixLexTypes.NEW_LINE,
-    '\r': InfixLexTypes.NEW_LINE,
-    '=': InfixLexTypes.ASSIGN
+    '-': IPLexToken.MINUS,
+    '(': IPLexToken.OPEN_BRACKET,
+    ')': IPLexToken.CLOSE_BRACKET,
+    '+': IPLexToken.PLUS,
+    '*': IPLexToken.MULTIPLY,
+    '/': IPLexToken.DIVIDE,
+    '\n': IPLexToken.NEW_LINE,
+    '\r': IPLexToken.NEW_LINE,
+    '=': IPLexToken.ASSIGN
 }
 
 def push_operator(obj : AbstractLexer, next_char : str):
     obj.tokens.append( (op_codes[next_char], next_char) )
 
 def push_number(obj : AbstractLexer, next_char : str):
-    obj.tokens.append( (InfixLexTypes.NUMBER, obj.token) )
+    obj.tokens.append( (IPLexToken.NUMBER, obj.token) )
 
 def push_token(obj : AbstractLexer, next_char : str):
-    obj.tokens.append( (InfixLexTypes.TOKEN, obj.token) )
+    obj.tokens.append( (IPLexToken.TOKEN, obj.token) )
 
 def push_minus(obj : AbstractLexer, next_char : str):
     prev_token = None
     if len(obj.tokens) > 0:
         prev_token = obj.tokens[-1]
-    if prev_token != None and prev_token[0] in {InfixLexTypes.NUMBER, InfixLexTypes.CLOSE_BRACKET, InfixLexTypes.TOKEN}:
-        obj.tokens.append((InfixLexTypes.PLUS, '+'))
+    if prev_token != None and prev_token[0] in {IPLexToken.NUMBER, IPLexToken.CLOSE_BRACKET, IPLexToken.TOKEN}:
+        obj.tokens.append((IPLexToken.PLUS, '+'))
     if (len(obj.token) % 2) != 0:
-        obj.tokens.append((InfixLexTypes.MINUS, '-'))
+        obj.tokens.append((IPLexToken.MINUS, '-'))
 
 number_space = ( push_number, AbstractLexer.reset_token )
 number_to_minus = (push_number, AbstractLexer.reset_token, AbstractLexer.accumulate)
@@ -77,7 +77,7 @@ transitions = {
                 (r'[0-9]','number', AbstractLexer.accumulate),
                 (r'\.','number-dot', AbstractLexer.accumulate),
                 (r'-','minus', AbstractLexer.accumulate),
-                (r'[A-Z]|[a-z]','token', AbstractLexer.accumulate),
+                (r'[A-Z]|[a-z]|_','token', AbstractLexer.accumulate),
                 (r'#','comment',())
             ],
             "number": [
@@ -89,7 +89,6 @@ transitions = {
                 (r'[+*(/=]','neutral', number_tuple),
                 (r'\.','number-dot', AbstractLexer.accumulate),
                 (r'-','minus', number_to_minus),
-                (r'[A-Z]|[a-z]','token', AbstractLexer.accumulate),
                 (r'#','comment', number_space)
             ],
             'number-dot': [
@@ -100,7 +99,6 @@ transitions = {
                 (r'\)', 'expect-operator', number_tuple),
                 (r'[+*(/=]','neutral', number_tuple),
                 (r'-','minus', number_to_minus),
-                (r'[A-Z]|[a-z]','token', AbstractLexer.accumulate),
                 (r'#','comment',number_space)
             ],
             'expect-operator': [
@@ -118,7 +116,7 @@ transitions = {
                 (r'-','minus', AbstractLexer.accumulate),
                 (r'\.','number-dot', exit_minus),
                 (r'[0-9]', 'number', exit_minus),
-                (r'[A-Z]|[a-z]','token', exit_minus)
+                (r'[A-Z]|[a-z]|_','token', exit_minus)
                 # comment after minus will lead to invalid code, therefore invalid
             ],
             'comment': [
@@ -133,12 +131,16 @@ transitions = {
                 (r'\)', 'expect-operator', token_tuple),
                 (r'[+*(/=]','neutral', token_tuple),
                 (r'-','minus', token_to_minus),
-                (r'[A-Z]|[a-z]|[0-9]|[\-_]','token', AbstractLexer.accumulate),
+                (r'[A-Z]|[a-z]|_','token', AbstractLexer.accumulate),
                 (r'#','comment', token_space)
 
             ]
 }
 
+# just a convenient wrapper over the AbstractLexer
+class InfixPlusLexer(AbstractLexer):
+    def __init__(self):
+        super().__init__(transitions,"neutral")
 
 if __name__ == "__main__":
     luthor = AbstractLexer(transitions, "neutral")

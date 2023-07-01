@@ -41,14 +41,15 @@ token = {('A'..'Z' | 'a'..'z' | '_')+}
 # This confirms that binary expressions are a real problem for left-recursion
 
 program = {expr ~ ("\n" ~ expr)*}
-expr = { assignment | unary_expr | binary_expr }
-term = { number | token | bracket_expr }
+expr = { assignment | add }
+term = { number | token | bracket_expr | unary_expr }
 assignment = { token ~ "=" ~ expr }
 unary_expr = {unary_op ~ expr}
-binary_expr = {term ~ (binary_op ~ expr)*}
+add = {mul ~ ("+" ~ add)?}
+mul = {term ~ (("/" | "*") ~ mul)?}
 bracket_expr = {"(" ~ expr ~ ")"}
 
-binary_op = {"/" | "*" | "+"}
+binary_op = {"+" | "*" | "/"}
 unary_op = {"-"}
 
 number = {'0'..'9'+ ~ ("." ~ '0'..'9'+)?}

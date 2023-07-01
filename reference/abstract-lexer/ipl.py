@@ -1,3 +1,5 @@
+# IPL means Infix Plus Lexer
+
 from enum import IntEnum
 from lexer import AbstractLexer, Transition, TransitionFn
 from argparse import ArgumentParser

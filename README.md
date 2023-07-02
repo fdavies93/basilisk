@@ -1,4 +1,6 @@
-# Basilisk Design Doc
+# Basilisk Language
+
+**Reference directory and experiments have been moved to [https://github.com/fdavies93/language-experiments]**
 
 Basilisk (working name) is a compiled, functional language which aims to take many Python conventions with regard to style and ease-of-use and make the language more suitable for large-scale applications and systems programming work.
 
